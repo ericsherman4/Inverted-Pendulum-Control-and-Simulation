@@ -39,6 +39,10 @@
 \end{titlepage}
 
 
+\tableofcontents
+\vfill
+
+
 \section{Introduction}
 
 In this project, I explore the dynamics of an inverted pendulums and potential methods used to control it. An inverted pendulum is a rod-cart system. A cart (represented as a rectangular prism with 4 wheels attached) is restricted to just moving along the x-axis by applying a push/pull force on the cart. A rod is a fixed to the top of the cart and is free to swing on a hinge that restricts the motion to just be along the x-y plane. The rod is allowed to swing the full 360 degrees meaning it is allowed to swing (and clip) through the cart.
@@ -248,7 +252,7 @@ Additionally, I chose to add an initial rod offset and an initial force so that 
 \section{Verification}
 
 \subsection{Controllability}
-We first check the controllability of the system using the methods detailed in [4]. I implemented a function to complete this check at the start of the simulation and part the result. The ctrb() function takes the A and B matrix as an input.
+We first check the controllability of the system using the methods detailed in [4]. I implemented a function to complete this check at the start of the simulation and print the result. The ctrb() function takes the A and B matrix as an input. For the A and B matrices used in this project, the system is controllable.
 
 \subsection{Linearization Checks}
 Because this is a linearized non-linear system, checks were implemented to ensure that the system operated within a region where the linearization was still accurate. In the top right corner of the simulation, a label showing weather the linearization is still accurate or not is shown.
@@ -282,12 +286,14 @@ The simulation behaves as expected and can balance the rod upright, even after s
 
 A comparison of this model and other models can be used as well. It is important to note that most other models use a mass-less rod with a point mass at the end. This changes the dynamics significantly. Under the "Python (GEKKO) Solution" in [11], we can see the response for the pendulum system with an initial force on the cart to the left. I have attempted to reproduce this using the parameters under "Verification" in the Scenarios section. The initial response of both systems is almost identical. However, with my system, the cart adjusts for the rod angle error immediately. Unfortunately, if I have reduce the weight for the rod angle error, I will get bad oscillations as the cart tries to reach the set position. If I increase the weight for the rod angle error, then the cart will follow a different trajectory than in [11]. Because the models used aren't exactly identical, this discrepancy in the trajectory of the rod and cart towards the end of the motion is expected. However, both models properly reach the desired end state.
 
+Other sources that have been used to verify my simulation and ensure that my model and implementation are correct has been outlined throughout the Background section.
+
 \section{Scenarios}
 
 Here, I have listed sets of initial values that result in satisfying controller responses. These parameters can be found in $plant\_inputs$ or the $sim\_inputs$ class. An * next to the name means that this scenario has been used for verification. If a parameter is not listed, this means the original simulation values were used. This includes things such as cart mass, rod length, rod mass, etc. In scenarios in which disturbances are a part of, I have included the disturbance parameters. If the they are omitted, the following parameters are assumed to be set: rod\_disturbance\_on = False and cart\_disturbance\_on = False. However, these parameters and related disturbance parameters are not hard requirements can be modified by the user if desired.
 
 \begin{enumerate}
-    \item Oscillatory Stable Response
+    \item Stable Oscillatory Response
         \begin{itemize}
             \item end\_state = np.array([[0], [0], [0], [0]])
             \item weights = [100, 1, 1000, 1]
@@ -298,7 +304,7 @@ Here, I have listed sets of initial values that result in satisfying controller 
             \item min\_force\_limit = -max\_force\_limit
         \end{itemize}
         
-    \item Oscillatory Unstable Response
+    \item Unstable Oscillatory Response
         \begin{itemize}
             \item end\_state = np.array([[0], [0], [0], [0]])
             \item weights = [100, 1, 1000, 1]
@@ -309,16 +315,10 @@ Here, I have listed sets of initial values that result in satisfying controller 
             \item min\_force\_limit = -max\_force\_limit
         \end{itemize}
         
-        \begin{center}
-            \includegraphics[width=12cm]{unstable response.png}
-            Figure 6. Unstable Oscillation.            
-        \end{center}
-
-    
     \item Triple Disturbance 
          \begin{itemize}
             \item end\_state = np.array([[1], [0], [0], [0]])
-            \item weights = [100, 1, 1000, 1]
+            \item weights = [10, 1, 1000, 10]
             \item cart\_starting\_pos\_x = -1
             \item rod\_starting\_angle = -math.pi/7
             \item init\_force = 800
@@ -343,11 +343,6 @@ Here, I have listed sets of initial values that result in satisfying controller 
             \item max\_force\_limit = 10
             \item min\_force\_limit = -max\_force\_limit
         \end{itemize}
-        \begin{center}
-            \includegraphics[width=12cm]{unstable controller.png}
-            Figure 7. The controller acts as a bang-bang controller. Without limits, the controller output explodes to +$\infty$.
-        \end{center}
-        
         
     \item Verification *
         \begin{itemize}
@@ -359,27 +354,80 @@ Here, I have listed sets of initial values that result in satisfying controller 
             \item max\_force\_limit = 10
             \item min\_force\_limit = -max\_force\_limit
         \end{itemize}
-        \begin{center}
-            \includegraphics[width=12cm]{unstable controller.png}
-            Figure 7. The controller acts as a bang-bang controller. Without limits, the controller output explodes to +$\infty$.
-        \end{center}
 
 \end{enumerate}
 
-
 \section{Results}
 
+Here, the results from different scenarios highlighted above will be included. The initial conditions for each scenario is specified above.
+
+On the output graph, the control output (force in Newtons) is in red, the angle from vertical (degrees) is in blue, the cart position in meters is in purple, and the lastly linearization valid is an orange curve that is equal to 0 if the linearization is no longer valid or equal to the 25.7831 if the linearization is valid. 25.7831 (degrees) is the threshold between valid and invalid.
+
+\subsection{Scenario: Stable Oscillatory Response}
+
+    \begin{center}
+        \includegraphics[width=15cm]{stableoscillationresponse.png}
+        Figure 6. Unstable Oscillation. 
+    \end{center}
+    
+    This response showcases what happens when the system is close to being unstable. We can see that the rod frequently swings out of the region where the linearization is valid.
+
+\subsection{Scenario: Unstable Oscillatory Response}
+
+    \begin{center}
+        \includegraphics[width=15cm]{Unstableoscresponse.png}
+        Figure 7. Unstable Oscillation. 
+    \end{center}
+    
+    Here, the angle deviation grows exponentially. We can see that the linearization is invalid for all of the time besides when the rod swings back past the equilibrium. The controller output is saturated for the entire simulation as well.
+    
+\subsection{Scenario: Tripe Disturbance}    
+    \begin{center}
+        \includegraphics[width=15cm]{triple disturbance.png}
+        Figure 8. Triple disturbance scenario.
+    \end{center}
+    
+     The system settles quickly and rarely operates outside of the safe region (the region where linearization approximations still apply). The controller quickly counteracts the disturbances at t=7 and t=10.
+    
+    
+\subsection{Scenario: Unstable Controller}
+    \begin{center}
+        \includegraphics[width = 15cm]{unstablecontroller.png}
+        Figure 9. Unstable controller scenario (disturbances included).
+    \end{center}
+    
+    The controller mostly acts as a bang-bang controller due it continually jumping from its positive limit to its negative limit and vice versa. Without limits, the controller output explodes to +$\infty$. This is because two output states of the system that are directly related were set to a high weight. Because of this direct relationship, the controller is unable to response sensibly.
+    
 
 \section{Evaluation}
 
+\subsection{Results}
+
+The Results section highlights the potential effects to the system due to different system inputs. With unreasonable weights, or with initial input forces or rod angles that result in pushing the system out of the safe region, we begin to get odd behavior. This is reflected in the results. 
+
+\subsection{Model Limitations}
+
+As discussed above, several approximations are used in the simulation. To start, the system had to be linearized in order to make it compatible with most controllers. As such, if the rod moves to an angle where these linearization approximations are no longer accurate, then the system is no longer accurate and odd behavior may occur. This is discussed in more detail in section 4.2. 
+
+Another limitation is the discretization approximation. As shown in section 3.2, equation 7, this approximation can only be made if $\Delta T$ is small. As tested but not included in this report, a $\Delta T$ of 0.01 instead of the chosen nominal time of 0.005 seconds results in an unstable system.
+
+\subsection{Reflection}
+
+This model is best setup to explore tuning of controllers and exploring behavior when the system is pushed beyond its limits. This model can be an excellent leaerning example covering many controls and math concepts such as linearization, state space representation, state space control, and discretization.
+
+Throughout this project I encountered many challenges. My first big challenge was discretizing the state-space representation so that I could use the model provided by [1] in my simulation. The second big challenge was finding and tuning a controller that worked for this application. I began with a PID controller however this is a difficult solution to implement for this type of problem. This is because this system is single-input, multi-output whereas the PID is only single-input, single output. A PID solution to this problem would probably require two PID controllers. I spent quite some time trying to implement this approach but after digging and coming across state-space controllers, I decided to abandon that effort. The last big challenge was figuring out the correct order in which to update the system and the controller. Thank you Dr. Mao for assisting me with this. The remaining bulk of my time was figuring out minor bugs such as accidentally setting gravity to be 9.8 instead of -9.8 and figuring out that certain assignments of weights can make the controller extremely unstable. Utilizing many Wikipedia articles, assistance from peers and Dr. Mao, I was able to take the project to a working state.
+
+Some other approaches that I could have taken towards the modeling is using different differentiation approaches. For example, using the Runge-Kutta method, forward Euler, or the bilinear transform (Tustin's method) would have likely worked as well. Another approach is to directly operate on the non-linear dynamics using a differential nonstiff solver such as ode45 (implemented in MATLAB).
 
 \section{Conclusions and Future work}
 \subsection{Conclusion}
 
-conlusions shiz ehre
+In this project, we explored the development of a model and representation of an inverted pendulum - cart system. The model had to be linearized in order to use a controller. We also explored the development of a controller and tuning it to get the desired response. We went through several scenarios which highlighted different controller responses.
 
 \subsection{Future Work}
-In terms of future work, I would like to analyze the effects of introducing different delays in the controller feedback. At a large enought time delay, the system should become unstable. Additionally, I would like to explore using other controllers with this system or even taking a machine learning approach - for example, using reinforcement learning. Lastly it would be interesting to potentially explore a system that is not bound to a 2D plane for both the cart and the rod.
+In terms of future work, I would like to analyze the effects of introducing different delays in the controller feedback. At a large enough time delay, the system should become unstable. Additionally, I would like to explore using other controllers with this system or even taking a machine learning approach - for example, using reinforcement learning. 
+
+As an extension, it would be interesting to potentially explore a system that is not bound to a 2D plane for both the cart and the rod.
 
 \section{Acknowledgements}
 \noindent A big thank you to:
@@ -409,21 +457,18 @@ $[5]$ Data Driven Science and Engineering; Machine Learning, Dynamical Systems, 
 $[6]$ Modeling and Simulation of Inverted Pendulum: \url{https://www.cantorsparadise.com/modelling-and-simulation-of-inverted-pendulum-5ac423fed8ac}
 \\
 \vspace{1 mm} \\
-$[7]$ Discretization: \url{https://en.wikipedia.org/wiki/Discretization} \\
-\\
+\noindent $[7]$ Discretization: \url{https://en.wikipedia.org/wiki/Discretization} \\
 \vspace{1 mm} \\
 $[8]$ State-Space Representation: \url{https://en.wikipedia.org/wiki/State-space_representation} \\
-\\
 \vspace{1 mm} \\
 $[9]$ Simulating and controlling an inverted pendulum: \url{https://fab.cba.mit.edu/classes/864.17/people/copplestone/final_project/index.html} \\
-\\
 \vspace{1 mm} \\
-$[10]$ Linear Quadratic Regulator (LQR) Control for the Inverted Pendulum on a Cart [Control Bootcamp]: \url{https://www.youtube.com/watch?v=1_UobILf3cc&list=PLMrJAkhIeNNR20Mz-VpzgfQs5zrYi085m&index=14} \\
-\\
+$[10]$ Linear Quadratic Regulator (LQR) Control for the Inverted Pendulum on a Cart [Control Bootcamp]: \url{https://www.youtube.com/watch?v=1_UobILf3cc} \\
 \vspace{1 mm} \\
-$[11]$ Inverted Pendulum Optimal Control: \url{https://apmonitor.com/do/index.php/Main/InvertedPendulum} \\
-\\
+\noindent $[11]$ Inverted Pendulum Optimal Control: \url{https://apmonitor.com/do/index.php/Main/InvertedPendulum} \\
 \vspace{1 mm} \\
-$[4]$ TITLE: \url{URL} \\
+$[12]$ Full-state Feedback Control: \url{http://web.mit.edu/16.31/www/Fall06/1631_topic13.pdf} \\
+\vspace{1 mm} \\
+$[13]$ State-Space Models and the Discrete-Time Realization Algorithm: \url{http://mocha-java.uccs.edu/ECE5710/ECE5710-Notes05.pdf} \\
 
 \end{document}
