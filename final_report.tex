@@ -30,8 +30,9 @@
         Eric Sherman \\
         April 29 2022
         
-        \vspace{3cm}
-        \includegraphics[width = 12 cm]{titlepage.png}
+        \vspace{2cm}
+        % \includegraphics[width = 12 cm]{titlepage.png}
+        \includegraphics[width = 13 cm]{titlepage2.png}
             
         \vfill
         
@@ -45,15 +46,15 @@
 
 \section{Introduction}
 
-In this project, I explore the dynamics of an inverted pendulums and potential methods used to control it. An inverted pendulum is a rod-cart system. A cart (represented as a rectangular prism with 4 wheels attached) is restricted to just moving along the x-axis by applying a push/pull force on the cart. A rod is a fixed to the top of the cart and is free to swing on a hinge that restricts the motion to just be along the x-y plane. The rod is allowed to swing the full 360 degrees meaning it is allowed to swing (and clip) through the cart.
+In this project, I explore the dynamics of an inverted pendulums and potential methods to control it. An inverted pendulum is a rod-cart system. A cart (represented as a rectangular prism with 4 wheels attached) is restricted to just moving along the x-axis via push/pull force. A rod is a fixed to the top of the cart and is free to swing on a hinge that restricts the motion to just be along the x-y plane. The rod is allowed to swing the full 360 degrees meaning it is able to travel and clip through the cart.
 
-The goal for the system is to achieve a final state (defined by the user) which almost always calls for balancing the rod in the vertical upright position. This means that a controller had to be implemented because the system by itself is unstable. The rod will always fall over unless there is an external force applied to balance to the cart to position it in a way that prevents the rod from falling. I've wanted to simulate this system for awhile now as it is a classic controls problem and I've seen it many times on social media, literature, and in lecture examples. Due to it's non-liner nature and being a single-input and multi-output system, there's many advanced control techniques required in order to be able to balance the rod in a perfectly vertical position. Several control methods were explored throughout this project including PID and state space control. 
+The goal for the system is to achieve some final state (defined by the user) which usually calls for balancing the rod in the vertical upright position. This means that a controller had to be implemented because the system by itself is unstable. The rod will always fall over unless there is an external force applied to balance to the cart to position it in a way that prevents the rod from doing so. I've wanted to simulate this system for awhile now as it is a classic controls problem and I've seen it many times on social media, literature, and in lecture examples. Due to it's non-liner nature and being a single-input and multi-output system, there's many advanced control techniques required in order to be able to balance the rod in a perfectly vertical position. Several control methods were explored throughout this project including PID and state space control. 
 
 \section{Motivation}
 
-An inverted pendulum is a classic non-linear controls problem used in academia to teach state state representation, reinforcement learning, state space control, and linearization. My motivation behind this project was to scratch the surface of some of these controls and math topics by going through the full simulation of the system and the controller. Because everything about the system is simulated, an additional effort was needed to discretizatize the system and figure out the order in which to update the system state.
+An inverted pendulum is a classic non-linear controls problem used in academia to teach state space representation, reinforcement learning, state space control, and linearization. My motivation behind this project was to scratch the surface of some of these controls and math topics by going through the full simulation of the system and the controller. Because everything about the system is simulated, an additional effort was needed to discretize the system and figure out the order in which to update the system state.
 
-As mentioned, this is a classic controls problem frequently used in academia as a teaching example. This model can be used to explore what happens when certain parameters of the system or the controller are changed and the performance of different controllers could be compared. Additionally, as an extension, the effect of disturbances or time delay can be visualized using this system as well. 
+This model can be used to explore what happens when certain parameters of the system or the controller are changed and the performance of different controllers could be compared. Additionally, as an extension, the effect of disturbances or time delay can be visualized using this system as well. 
 
 \section{Background}
 \subsection{System Dynamics}
@@ -67,14 +68,14 @@ As mentioned, this is a classic controls problem frequently used in academia as 
 \noindent The cart-rod system is defined as follows:
 \begin{enumerate}
     \item A cart is allowed to move latterly (restricted to x-axis) and is assigned a mass, $M$.
-    \item The cart has friction in its wheels and this is simply modeled as $F_{friction} = -b\Ddot{x}$ where $b$ is the coefficient of friction.
-    \item A rod, attached to a hinge at the top center of the cart, is allowed to swing freely (full 360 degrees of motion). There is not friction in the hinge.
-    \item The rod has a mass $m$ and length of $2*l$, where $l$ is the distance to the center of the cart. It has a moment of inertia of $I$ given by $\cfrac{ml^2}{3}$. It is important to remember that $l$ represents half the length of the rod as this is used throughout the calculations.
-    \item The carts x-position is represented by $x$. 
+    \item The cart has friction in its wheels and this is simply modeled as \\ $F_{friction} = -b\Ddot{x}$ where $b$ is the coefficient of friction.
+    \item A rod, attached to a hinge at the top center of the cart, is allowed to swing freely (full 360 degrees of motion in the x-y plane). There is no friction in the hinge.
+    \item The rod has a mass $m$ and length of $2*l$, where $l$ is the distance to the center of the cart. It has a moment of inertia of $I$ given by $\cfrac{m(2l)^2}{3}$. It is important to remember that $l$ represents half the length of the rod as this is used throughout the calculations.
+    \item The cart's x-position is represented by $x$. 
     \item The cart is pushed or pulled by a force $F$. 
 \end{enumerate}
 
-The equations can be derived using $F=m*a$ and $\tau = I* \alpha$. The dynamics are derived by first summing all the forces in the horizontal direction for the cart and then summing the horizontal forces on the rod. This system is single-input and multi-output so there will be two dynamics equations needed to represent the whole system. The first equation comes from the horizontal forces on the cart and rod as mentioned above and the second equation comes from the forces on the perpendicular axis of the pendulum. The focus of this project was more so on discretization of this system and on the controller, therefore I chose to use the equations provided by the University of Michigan in [1]. The derivation is also detailed in [2] and [3]. From [1], the final results are: 
+The equations can be derived using $F=m*a$ and $\tau = I* \alpha$. The dynamics are derived by summing all the forces in the horizontal direction for the cart, summing the horizontal forces on the rod, and then summing the forces on the perpendicular axis of the pendulum. This system is single-input and multi-output so there will be two dynamics equations needed to represent the whole system. The first equation comes from the horizontal forces on the cart and rod and the second equation comes from the forces on the on the pendulum. The focus of this project was more so on discretization of this system and on the controller, therefore I chose to use the equations provided by the University of Michigan in [1]. The derivation is also detailed in [2] and [3]. From [1], the final results are: 
 
 \begin{equation}
     F = (M + m)\Ddot{x} + b\Dot{x} + ml\Ddot{\theta}\cos{\theta} - ml\Dot{\theta}^2\sin{\theta}
@@ -86,7 +87,7 @@ The equations can be derived using $F=m*a$ and $\tau = I* \alpha$. The dynamics 
 These equations are non-linear equations. Because most control methods can be applied to linear systems, it is required that these equations be linearized. Using the small angle theorem and other approximations and linearizing about the vertical equilibrium angle ($\theta = \pi$), we can greatly simplify the equations. These approximations are detailed in verification section. However, this means that in order for the system to be accurate, it must only operate within small angle deviations from $\theta = \pi$. Due to the linearization about  $\theta = \pi$, we define $\theta = \phi + \pi$ where $\phi$ is a small deviation from equilibrium.  After linearization (as detailed in [1]), the final equations become: 
 
 \begin{equation}
-    (I+ml^2)*\Ddot{\phi} -  mgl\phi = ml\Ddot{x}
+    (I+ml^2)\Ddot{\phi} -  mgl\phi = ml\Ddot{x}
 \end{equation}
 \begin{equation}
     (M+m)\Ddot{x} + b\Dot{x} - ml\Ddot{\phi} = u
@@ -98,7 +99,7 @@ Since this system will be simulated, it is helpful to represent the system in an
 
 \begin{center}
     \includegraphics[width = 12cm]{influence_diag.png}
-    Figure 2. Influence diagrams.
+    Figure 2. Influence diagram for the inverted pendulum.
 \end{center}
 
 Continuing the derivation of the dynamics of the system, we can take the Laplace transform of these equations (as shown in [1]), yielding:
@@ -109,10 +110,10 @@ Continuing the derivation of the dynamics of the system, we can take the Laplace
     
 \end{center}
 
-where $q = (M + m)(I + ml^2) -(ml)^2$. If we take the inverse Laplace transform, we could see the functional relationships between the input and output for the system. As mentioned before, we have one input, the force, and two outputs, the position of the cart and the angle of the rod. The inverse Laplace transform of these functions would allow us to construct a simulation diagram representing the functional relationship between the input and the output, but because these systems are of higher order, completing this calculation would be complex. 
+where $q = (M + m)(I + ml^2) -(ml)^2$. If we take the inverse Laplace transform, we could see the functional relationships between the input and output for the system. As mentioned before, we have one input, the force, and two outputs, the position of the cart and the angle of the rod. The inverse Laplace transform of these functions would give us the time domain representation of the system and allow us to construct a simulation diagram representing the functional relationship between the input and the output. Because these systems are of higher order, completing this calculation would be complex. 
 
 
-As mentioned above, taking the inverse Laplace transform to get to the time domain representation would be too complex, so simulating the system with the time domain input-output equations wouldn't be feasible. Instead, I use state-space representation, which nicely models the system as a set of input and output matrices in the form of first order differential equations. The continuous-time state space representation is in the following form:
+Since working with the time domain representation isn't feasible, I used state-space representation, which nicely models the system as a set of input and output matrices in the form of first order differential equations. The continuous-time state space representation is in the following form:
 
 \begin{align}
     \Dot{x} = Ax + Bu \\
@@ -156,7 +157,7 @@ In discrete time, the $\Dot{x}$ matrix is actually the next state matrix at $t +
     \end{bmatrix}
 \end{equation}
 
-\noindent and $x(k+1)$ contains the next state values. Equation 10 uses the forward Euler method. In my model, I use the backward Euler method changing Equation 10 to:
+\noindent and $x(k+1)$ contains the next state values. Equation (10) uses the forward Euler method. In my model, I use the backward Euler method changing Equation (10) to:
 
 \begin{align}
     x(k+1) & = (I - A\Delta T)^{-1}x(k) + B\Delta T u(k)
@@ -187,7 +188,7 @@ LQR will produce a matrix of gains which is used in the update function:
     \end{bmatrix}
 \end{equation}
 
-Both $measured$ and $setpoint$ are matrices with the same dimensions as the state matrix. In this case, measured is just the state matrix, $x(k+1)$. We fill the setpoint matrix with the desired end states of the system. In my case, I want the final cart position to be 1 meter, the angle deviation of the rod to be 0, the cart velocity to be 0, and the angular velocity of the rod to be 0, although these can be modified in the code. This gives:
+Both $measured$ and $setpoint$ are matrices with the same dimensions as the state matrix. In this case, $measured$ is just the state matrix, $x(k+1)$. We fill the setpoint matrix with the desired end states of the system. In my case, I want the final cart position to be 1 meter, the angle deviation of the rod to be 0, the cart velocity to be 0, and the angular velocity of the rod to be 0, although these can be modified in the code. This gives:
 
 \begin{equation}
     setpoint = 
@@ -199,7 +200,7 @@ Both $measured$ and $setpoint$ are matrices with the same dimensions as the stat
     \end{bmatrix}
 \end{equation}
 
-In order for LQR to produce the K matrix, we need the A and B matrix from earlier, and also a Q matrix and R value. R is the cost to control so if R is low, this means it doesn't cost much for us to actuate this system, meaning the controller will actuate it aggressively if needed. With a high R, this means the cost of controlling a system is high, so the controller will tend to be more conservative. Q the matrix contains weights on each of the state values. It is in the form:
+In order for LQR to produce the K matrix, we need the A and B matrix from earlier, and also a Q matrix and R value. R is the cost to control so if R is low, this means it doesn't cost much for us to actuate this system, meaning the controller will respond aggressively if needed. With a high R, this means the cost of controlling a system is high, so the controller will tend to be more conservative. The Q matrix contains weights for each of the state values. It is in the form:
 
 \begin{equation}
     Q = 
@@ -223,7 +224,7 @@ In order for LQR to produce the K matrix, we need the A and B matrix from earlie
     \end{bmatrix}
 \end{equation}
 
-\noindent It is possible to make the controller unstable depending on your Q matrix. I have found having a have a high position and velocity values for either the cart or the rod can result in unstable behavior because these states are directly related to each other.
+\noindent It is possible to make the controller unstable depending on your Q matrix. I have found that high position and velocity values for either the cart or the rod can result in unstable behavior because these states are directly related to each other.
 
 Lastly, we add limits to the controller output ($u$) to prevent it from producing unreasonable forces on the cart. This limit can be modified in the $sim\_inputs$ class. 
 
@@ -246,7 +247,7 @@ Most of the model parameters were used from [1]. I chose to lengthen the rod to 
 
 In terms of the controller, I tuned the Q matrix until I was able to get an optimal response. The R value I chose to be fairly low because in a simulation, it doesn't cost anything to actuate the system.
 
-Additionally, I chose to add an initial rod offset and an initial force so that the controller has to immediately kick into action to prevent the rod from turning over. I added two customizable disturbances in the form of a cart disturbance and a rod disturbance later on the simulation. It is important that I chose initial values that prevents the rod from having a large enough deviation that it falls out of the small angle approximation region. If this happens, the system model is no longer accurate and the behavior will be off. I implemented a check to warn the user if the rod falls out of the region of nominal operation.
+Additionally, I chose to add an initial rod offset and an initial force so that the controller has to immediately kick into action to prevent the rod from turning over. I added two customizable disturbances in the form of a cart disturbance and a rod disturbance later on the simulation. It is important that I chose initial values that prevents the rod from having a large enough deviation that the angle approximations are no longer accurate. If this happens, the system behavior might be incorrect. I implemented a check to warn the user if the rod falls out of the region of nominal operation.
 
 
 \section{Verification}
@@ -255,7 +256,7 @@ Additionally, I chose to add an initial rod offset and an initial force so that 
 We first check the controllability of the system using the methods detailed in [4]. I implemented a function to complete this check at the start of the simulation and print the result. The ctrb() function takes the A and B matrix as an input. For the A and B matrices used in this project, the system is controllable.
 
 \subsection{Linearization Checks}
-Because this is a linearized non-linear system, checks were implemented to ensure that the system operated within a region where the linearization was still accurate. In the top right corner of the simulation, a label showing weather the linearization is still accurate or not is shown.
+Because this is a linearized non-linear system, checks were implemented to ensure that the system operated within a region where the linearization was still accurate. In the top right corner of the simulation, a label displays whether the linearization is still accurate or not.
 
 The following linearizations were used (from [1]):
 
@@ -278,11 +279,11 @@ The following linearizations were used (from [1]):
     Figure 5. $\Dot{\phi}^2$ approximation. \\
 \end{center}
 
-I set 20\% error as the threshold for considering the approximations accurate. The fastest approximation to hit this threshold is  $\Dot{\phi}^2$.
+I set 20\% error as the threshold for considering the approximations accurate. The fastest approximation to hit this threshold is  $\Dot{\phi}^2$. This occurs when the absolute value of the angle is 0.45 radians.
 
 \subsection{Visual Verification}
 
-The simulation behaves as expected and can balance the rod upright, even after several different disturbance profiles such as an impulse disturbance in the rod angle, an impulse disturbance in the cart force, and rectangular pulse disturbance in the cart force (applying the same force over time for x seconds). As long as the initial disturbances aren't too great and the angle deviation for the rod stays close to the equilibrium point, the system model is accurate and the controller behaves as expected.
+The simulation behaves as expected and can balance the rod upright, even after several different disturbance profiles such as an impulse disturbance in the rod angle, an impulse disturbance in the cart force, and a rectangular pulse disturbance in the cart force (applying the same force over time for x seconds). As long as the initial disturbances aren't too great and the angle deviation for the rod stays close to the equilibrium point, the system model is accurate and the controller behaves as expected.
 
 A comparison of this model and other models can be used as well. It is important to note that most other models use a mass-less rod with a point mass at the end. This changes the dynamics significantly. Under the "Python (GEKKO) Solution" in [11], we can see the response for the pendulum system with an initial force on the cart to the left. I have attempted to reproduce this using the parameters under "Verification" in the Scenarios section. The initial response of both systems is almost identical. However, with my system, the cart adjusts for the rod angle error immediately. Unfortunately, if I have reduce the weight for the rod angle error, I will get bad oscillations as the cart tries to reach the set position. If I increase the weight for the rod angle error, then the cart will follow a different trajectory than in [11]. Because the models used aren't exactly identical, this discrepancy in the trajectory of the rod and cart towards the end of the motion is expected. However, both models properly reach the desired end state.
 
@@ -290,7 +291,7 @@ Other sources that have been used to verify my simulation and ensure that my mod
 
 \section{Scenarios}
 
-Here, I have listed sets of initial values that result in satisfying controller responses. These parameters can be found in $plant\_inputs$ or the $sim\_inputs$ class. An * next to the name means that this scenario has been used for verification. If a parameter is not listed, this means the original simulation values were used. This includes things such as cart mass, rod length, rod mass, etc. In scenarios in which disturbances are a part of, I have included the disturbance parameters. If the they are omitted, the following parameters are assumed to be set: rod\_disturbance\_on = False and cart\_disturbance\_on = False. However, these parameters and related disturbance parameters are not hard requirements can be modified by the user if desired.
+Here, I have listed sets of initial values that result in different controller responses. These parameters can be found in $plant\_inputs$ or the $sim\_inputs$ class. An * next to the name means that this scenario has been used for verification. If a parameter is not listed, this means the original simulation values were used. This includes things such as cart mass, rod length, rod mass, etc. In scenarios in which disturbances are a part of, I have included the disturbance parameters. If the they are omitted, the following parameters are assumed to be set: rod\_disturbance\_on = False and cart\_disturbance\_on = False. However, these parameters and related disturbance parameters are not hard requirements can be modified by the user if desired.
 
 \begin{enumerate}
     \item Stable Oscillatory Response
@@ -361,7 +362,7 @@ Here, I have listed sets of initial values that result in satisfying controller 
 
 Here, the results from different scenarios highlighted above will be included. The initial conditions for each scenario is specified above.
 
-On the output graph, the control output (force in Newtons) is in red, the angle from vertical (degrees) is in blue, the cart position in meters is in purple, and the lastly linearization valid is an orange curve that is equal to 0 if the linearization is no longer valid or equal to the 25.7831 if the linearization is valid. 25.7831 (degrees) is the threshold between valid and invalid.
+On the output graph, the control output (force in Newtons) is in red, the angle from vertical (degrees) is in blue, the cart position in meters is in purple, and lastly, linearization valid is an orange curve that is equal to 0 if the linearization is no longer valid or equal to the 25.7831 if the linearization is valid. 25.7831 (degrees) is the threshold between valid and invalid.
 
 \subsection{Scenario: Stable Oscillatory Response}
 
@@ -381,7 +382,7 @@ On the output graph, the control output (force in Newtons) is in red, the angle 
     
     Here, the angle deviation grows exponentially. We can see that the linearization is invalid for all of the time besides when the rod swings back past the equilibrium. The controller output is saturated for the entire simulation as well.
     
-\subsection{Scenario: Tripe Disturbance}    
+\subsection{Scenario: Triple Disturbance}    
     \begin{center}
         \includegraphics[width=15cm]{triple disturbance.png}
         Figure 8. Triple disturbance scenario.
@@ -396,7 +397,7 @@ On the output graph, the control output (force in Newtons) is in red, the angle 
         Figure 9. Unstable controller scenario (disturbances included).
     \end{center}
     
-    The controller mostly acts as a bang-bang controller due it continually jumping from its positive limit to its negative limit and vice versa. Without limits, the controller output explodes to +$\infty$. This is because two output states of the system that are directly related were set to a high weight. Because of this direct relationship, the controller is unable to response sensibly.
+    The controller mostly acts as a bang-bang controller due it continually jumping from its positive limit to its negative limit and vice versa. Without limits, the controller output explodes to $\infty$. This is because two output states of the system that are directly related were set to a high weight. Because of this direct relationship, the controller is unable to respond sensibly.
     
 
 \section{Evaluation}
@@ -409,20 +410,20 @@ The Results section highlights the potential effects to the system due to differ
 
 As discussed above, several approximations are used in the simulation. To start, the system had to be linearized in order to make it compatible with most controllers. As such, if the rod moves to an angle where these linearization approximations are no longer accurate, then the system is no longer accurate and odd behavior may occur. This is discussed in more detail in section 4.2. 
 
-Another limitation is the discretization approximation. As shown in section 3.2, equation 7, this approximation can only be made if $\Delta T$ is small. As tested but not included in this report, a $\Delta T$ of 0.01 instead of the chosen nominal time of 0.005 seconds results in an unstable system.
+Another limitation is the discretization approximation. As shown in section 3.2, equation (7), this approximation can only be made if $\Delta T$ is small. As tested but not included in this report, a $\Delta T$ of 0.01 instead of the chosen nominal time of 0.005 seconds results in an unstable system.
 
 \subsection{Reflection}
 
 This model is best setup to explore tuning of controllers and exploring behavior when the system is pushed beyond its limits. This model can be an excellent leaerning example covering many controls and math concepts such as linearization, state space representation, state space control, and discretization.
 
-Throughout this project I encountered many challenges. My first big challenge was discretizing the state-space representation so that I could use the model provided by [1] in my simulation. The second big challenge was finding and tuning a controller that worked for this application. I began with a PID controller however this is a difficult solution to implement for this type of problem. This is because this system is single-input, multi-output whereas the PID is only single-input, single output. A PID solution to this problem would probably require two PID controllers. I spent quite some time trying to implement this approach but after digging and coming across state-space controllers, I decided to abandon that effort. The last big challenge was figuring out the correct order in which to update the system and the controller. Thank you Dr. Mao for assisting me with this. The remaining bulk of my time was figuring out minor bugs such as accidentally setting gravity to be 9.8 instead of -9.8 and figuring out that certain assignments of weights can make the controller extremely unstable. Utilizing many Wikipedia articles, assistance from peers and Dr. Mao, I was able to take the project to a working state.
+Throughout this project I encountered many challenges. My first big challenge was discretizing the state-space representation so that I could use the model provided by [1] in my simulation. The second big challenge was finding and tuning a controller that worked for this application. I began with a PID controller; however, this is a difficult solution to implement for this type of problem. This is because this system is single-input, multi-output whereas PID is only single-input, single output. A PID solution to this problem would probably require two PID controllers. I spent quite some time trying to implement this approach but after some digging and coming across state-space controllers, I decided to abandon that effort. The last big challenge was figuring out the correct order in which to update the system and the controller. Thank you Dr. Mao for assisting me with this. The remaining bulk of my time was figuring out minor bugs such as accidentally setting gravity to be 9.8 instead of -9.8, figuring out that certain assignments of weights can make the controller extremely unstable, and lastly, discovering that my model was using the wrong equilibrium point (credits to Dr. Mao again for this catch). Utilizing many Wikipedia articles, assistance from peers and Dr. Mao, I was able to take the project to a working state.
 
 Some other approaches that I could have taken towards the modeling is using different differentiation approaches. For example, using the Runge-Kutta method, forward Euler, or the bilinear transform (Tustin's method) would have likely worked as well. Another approach is to directly operate on the non-linear dynamics using a differential nonstiff solver such as ode45 (implemented in MATLAB).
 
 \section{Conclusions and Future work}
 \subsection{Conclusion}
 
-In this project, we explored the development of a model and representation of an inverted pendulum - cart system. The model had to be linearized in order to use a controller. We also explored the development of a controller and tuning it to get the desired response. We went through several scenarios which highlighted different controller responses.
+In this project, we explored the development of a model and representation of an inverted pendulum - cart system. The model had to be linearized in order to use a controller. We also explored the development this controller and tuning it to get the desired response. We went through several scenarios which highlighted different controller and system responses.
 
 \subsection{Future Work}
 In terms of future work, I would like to analyze the effects of introducing different delays in the controller feedback. At a large enough time delay, the system should become unstable. Additionally, I would like to explore using other controllers with this system or even taking a machine learning approach - for example, using reinforcement learning. 
