@@ -6,4 +6,5 @@ Code is in EricSherman_FinalProject.ipynb (Jupyter Notebook).
 
 Visuals are created with Vpython / Glowscript.
 
+https://user-images.githubusercontent.com/44278520/165020451-b6db8d99-4296-4864-9942-eb87ee00573a.MOV
 
